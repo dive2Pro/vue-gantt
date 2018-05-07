@@ -1,12 +1,12 @@
 <template>
-  <svg
-    :style="{height: '100%', width: '1150px'}">
-    <Task
-      v-for="(item, index) in items" :key="item.id +'-' + index "
-      :timeWidth="timeWidth"
-      :calcOffWidth="calcOffWidth"
-      :datum="getItemStyle(start + index)" :task="item" :readOnly="readOnly" :calcStartx="calcStartx" />
-  </svg>
+    <g>
+      <Task
+        v-for="(item, index) in items" :key="item.id +'-' + index "
+        :timeWidth="timeWidth"
+        :calcOffWidth="calcOffWidth"
+        :datum="getItemStyle(start + index)" :task="item" :readOnly="readOnly" :calcStartx="calcStartx" />
+    </g>
+
 </template>
 
 <script>
@@ -36,7 +36,7 @@ export default {
     }
   },
   updated: function() {
-    console.log("xasis - updated");
+    // console.log("xasis - updated");
   }
 };
 </script>

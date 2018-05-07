@@ -54,14 +54,15 @@ class PositionManager {
 
   getVisibleRange({
     offset,
-    containerHeight
+    containerHeight,
+    overscanCount = 1
   }) {
     const total = this.getTotal();
     if (total == 0) {
       return {};
     }
     const maxOffset = offset + containerHeight;
-    const start = this.getNestestIndexFor(offset);
+    let start = this.getNestestIndexFor(offset);
     const datum = this.getDatumForIndex(start);
     offset = datum.size + datum.offset;
     let stop = start;
@@ -70,7 +71,10 @@ class PositionManager {
       stop++;
       offset = offset + this.getDatumForIndex(stop).size;
     }
-    // console.log(start, stop , offset, maxOffset)
+    if (overscanCount) {
+      start = Math.max(0, start - overscanCount)
+      stop = Math.min(this.dataCount, stop + overscanCount)
+    }
     return {
       start,
       stop
@@ -213,6 +217,7 @@ export default {
     });
     this.start = start;
     this.stop = stop;
+    // this.$el.scrollTop = offset +'px'
   },
   render(h) {
     const self = this

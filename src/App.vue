@@ -2,41 +2,56 @@
   <div>
     <div class="virtualize-list">
         
-    <VirualizeList :data="datas"
+    <VirualizeList
     :containerHeight="chartHeight"
     :dataCount="datas.length"
     >
     <template slot="cell" slot-scope="cell">
       <div :style="cell.getWrapperStyle()" class="svg-container">
-          <svg 
-          :style="{height: '100%', width: '100px'}"
-          class="yaxis-container">
-          </svg>
+            <svg
+    :style="{height: '100%', width: '1150px'}">
+    <g :style="chartG">
+
+          <HelpLines 
+            :startY="cell.getItemStyle(cell.start).top"
+            :columnWidth="helpLinesWidth"
+            :stopY="helpLinesEndY(cell)"
+          />
           <XAxis
             :calcStartx="calcStartx"
             :start="cell.start" :stop="cell.stop" :datas="datas" :getItemStyle="cell.getItemStyle"
             :timeWidth="timeWidth"
             :calcOffWidth="calcOffWidth"
-            :proption="proption"
             />
+    </g>
+
+            </svg>
+
       </div>
 
     </template>
     </VirualizeList>
     </div>
     <div class="graduation"/>
-    <div class="slide" />
-    <input type="range" max="1" min="0" step="0.01" v-model="proption" >
+    <Slide class="slide" 
+      :startPercent="startPercent"
+      :percent="+percent"
+      :width="width"
+      :onChange="onSlideChange"
+    />
   </div>
 </template>
 
 <script>
 import VirualizeList from "./components/VirtualizeList";
 import XAxis from "./components/XAxis";
+import Slide from "./components/Slide";
+import HelpLines from "./components/HelpLines";
 import dayjs from "dayjs";
+
 const dayValueOf = dayjs()
   .add(1, "day")
-  .diff(dayjs(), "valueOf"); // 0
+  .diff(dayjs(), "valueOf");
 
 const DATE = "2018-4-21, ";
 const datas = [
@@ -117,15 +132,18 @@ const datas = [
 ];
 export default {
   name: "Gantt",
-  components: { VirualizeList, XAxis },
+  components: { VirualizeList, XAxis, Slide, HelpLines },
   props: {
     datas: {
       type: Array,
       default: function() {
-        return datas
-          .concat(datas)
-          .concat(datas)
-          .concat(datas);
+        let newDatas = [];
+        new Array(1000).fill(0).forEach((_, i) => {
+          newDatas = newDatas.concat(
+            datas.map((d, i) => ({ ...d, id: d.id + "-" + i }))
+          );
+        });
+        return newDatas;
       },
       required: false
     },
@@ -137,7 +155,7 @@ export default {
       type: Number | String,
       default: 0.4
     },
-    startPercent: { type: Number, default: 0 },
+    initialStartPercent: { type: Number, default: 0 },
     date: { type: String, default: "2018-4-21" },
     width: {
       type: Number | String,
@@ -156,7 +174,7 @@ export default {
       return 100 + "px";
     },
     xAxisWidth: function() {
-      return this.width - 100;
+      return this.width;
     },
     startOfDay: function() {
       return dayjs(this.date)
@@ -164,44 +182,70 @@ export default {
         .millisecond();
     },
     calcOffWidth: function() {
-      let proption = this.proption;
+      let percent = this.percent;
       return this.calcWidth;
     },
     timeWidth: function() {
-      let proption = this.proption;
+      let percent = this.percent;
       return (start, stop) => {
         start = dayjs(start).valueOf();
         stop = dayjs(stop).valueOf();
         return this.calcWidth(stop - start);
       };
+    },
+    helpLinesWidth: function() {
+      const { proption, width } = this;
+
+      return width / 48 / proption;
+    },
+    chartG: function() {
+      const { startPercent, width } = this;
+      return { transform: `translate(${startPercent * width * -1}px , 0)` };
+    },
+    proption: function() {
+      return this.percent  == 0 ? 0.001 : this.percent
     }
   },
   data: function() {
     return {
-      proption: this.initialProption + ""
+      percent: this.initialProption + "",
+      startPercent: this.initialStartPercent
     };
   },
   methods: {
     calcWidth: function(width) {
-      const result = width / dayValueOf * this.xAxisWidth / this.proption;
+      const result =
+        width /
+        dayValueOf *
+        this.xAxisWidth / this.proption
       return result;
-    },
-    handleScroll: function(ev) {
-      console.log(ev);
     },
     calcStartx: function(time) {
       return this.timeWidth(this.startOfDay, time);
+    },
+    onSlideChange: function({ startPercent, percent }) {
+      this.startPercent = startPercent == null ? 0 : startPercent;
+      this.percent = percent == null ? 0 : percent;
+    },
+    helpLinesEndY: function(cell) {
+      const { top, height } = cell.getItemStyle(cell.stop);
+      return top + height;
     }
   }
 };
 </script>
 
-<style scoped>
+<style >
 .svg-container {
   width: 100%;
 }
 .svg-container svg {
   height: 100%;
+}
+.svg-container line {
+  stroke: lightblue;
+  stroke-width: 1;
+  stroke-dasharray: 10 3;
 }
 </style>
 

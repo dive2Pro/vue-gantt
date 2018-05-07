@@ -1,6 +1,18 @@
 <template>
   <g style="taskStyle" class="task-g">
-    <text style="textStyle" :y="textY">
+    <line 
+          :x1="0" 
+          :y1="datum.top + 'px'" 
+          :y2="datum.top + 'px'"          
+          :x2="width"
+           />
+    <line 
+          :x1="0"
+          :y1="datum.top + datum.height + 'px'" 
+          :y2="datum.top + datum.height + 'px'"
+          :x2="width"
+     />  
+    <text :style="textStyle" :y="textY">
         {{task.name}}
     </text> 
     <rect :style="avarageStyle" :width="avarageWidth" />    
@@ -9,6 +21,11 @@
 </template>
 
 <script>
+import dayjs from 'dayjs'
+
+const dayValueOf = dayjs()
+  .add(1, "day")
+  .diff(dayjs(), "valueOf");
 export default {
   name: "Task",
   props: {
@@ -50,12 +67,16 @@ export default {
     usedWidth: function() {
       const { timeWidth, task: { usedTime: { startTime, endTime } } } = this;
       return timeWidth(startTime, endTime) + "px";
+    },
+    width: function() {
+      const {calcOffWidth} = this
+      return calcOffWidth(dayValueOf) + 'px'
     }
   },
   beforeMount: function() {},
   created: function() {},
   updated: function() {
-    console.log("updated task");
+    // console.log("updated task");
   }
 };
 </script>
